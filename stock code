@@ -1,0 +1,195 @@
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
+class Stock {
+    private String ticker;
+    private double price;
+
+    public Stock(String ticker, double price) {
+        this.ticker = ticker;
+        this.price = price;
+    }
+
+    public String getTicker() {
+        return ticker;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    @Override
+    public String toString() {
+        return "Stock{" +
+                "ticker='" + ticker + '\'' +
+                ", price=" + price +
+                '}';
+    }
+}
+
+class Market {
+    private Map<String, Stock> stocks;
+
+    public Market() {
+        stocks = new HashMap<>();
+        initializeMarket();
+    }
+
+    private void initializeMarket() {
+        stocks.put("AAPL", new Stock("AAPL", 150.00));
+        stocks.put("GOOGL", new Stock("GOOGL", 2800.00));
+        stocks.put("AMZN", new Stock("AMZN", 3400.00));
+    }
+
+    public Stock getStock(String ticker) {
+        return stocks.get(ticker);
+    }
+
+    public void updateStockPrice(String ticker, double newPrice) {
+        if (stocks.containsKey(ticker)) {
+            stocks.get(ticker).setPrice(newPrice);
+        }
+    }
+
+    public void printMarketData() {
+        for (Stock stock : stocks.values()) {
+            System.out.println(stock);
+        }
+    }
+}
+
+class Portfolio {
+    private Map<String, Integer> holdings;
+    private double cash;
+
+    public Portfolio(double initialCash) {
+        holdings = new HashMap<>();
+        cash = initialCash;
+    }
+
+    public void buyStock(String ticker, int quantity, double price) {
+        double cost = quantity * price;
+        if (cost <= cash) {
+            cash -= cost;
+            holdings.put(ticker, holdings.getOrDefault(ticker, 0) + quantity);
+            System.out.println("Bought " + quantity + " shares of " + ticker);
+        } else {
+            System.out.println("Not enough cash to buy " + quantity + " shares of " + ticker);
+        }
+    }
+
+    public void sellStock(String ticker, int quantity, double price) {
+        if (holdings.getOrDefault(ticker, 0) >= quantity) {
+            cash += quantity * price;
+            holdings.put(ticker, holdings.get(ticker) - quantity);
+            if (holdings.get(ticker) == 0) {
+                holdings.remove(ticker);
+            }
+            System.out.println("Sold " + quantity + " shares of " + ticker);
+        } else {
+            System.out.println("Not enough shares to sell " + quantity + " shares of " + ticker);
+        }
+    }
+
+    public void printPortfolio() {
+        System.out.println("Portfolio:");
+        for (Map.Entry<String, Integer> entry : holdings.entrySet()) {
+            System.out.println(entry.getKey() + ": " + entry.getValue() + " shares");
+        }
+        System.out.println("Cash: $" + cash);
+    }
+}
+
+class Trade {
+    private String ticker;
+    private int quantity;
+    private double price;
+    private boolean isBuy;
+
+    public Trade(String ticker, int quantity, double price, boolean isBuy) {
+        this.ticker = ticker;
+        this.quantity = quantity;
+        this.price = price;
+        this.isBuy = isBuy;
+    }
+
+    @Override
+    public String toString() {
+        return (isBuy ? "Buy" : "Sell") + " " + quantity + " shares of " + ticker + " at $" + price;
+    }
+}
+
+public class StockTradingPlatform {
+    private Market market;
+    private Portfolio portfolio;
+
+    public StockTradingPlatform(double initialCash) {
+        market = new Market();
+        portfolio = new Portfolio(initialCash);
+    }
+
+    public void start() {
+        Scanner scanner = new Scanner(System.in);
+        String command;
+        while (true) {
+            System.out.println("\nEnter command (market, buy, sell, portfolio, exit): ");
+            command = scanner.nextLine();
+            switch (command.toLowerCase()) {
+                case "market":
+                    market.printMarketData();
+                    break;
+                case "buy":
+                    handleBuy(scanner);
+                    break;
+                case "sell":
+                    handleSell(scanner);
+                    break;
+                case "portfolio":
+                    portfolio.printPortfolio();
+                    break;
+                case "exit":
+                    System.out.println("Exiting...");
+                    scanner.close();
+                    return;
+                default:
+                    System.out.println("Unknown command.");
+            }
+        }
+    }
+
+    private void handleBuy(Scanner scanner) {
+        System.out.println("Enter ticker symbol: ");
+        String ticker = scanner.nextLine();
+        System.out.println("Enter quantity: ");
+        int quantity = Integer.parseInt(scanner.nextLine());
+        Stock stock = market.getStock(ticker);
+        if (stock != null) {
+            portfolio.buyStock(ticker, quantity, stock.getPrice());
+        } else {
+            System.out.println("Stock not found.");
+        }
+    }
+
+    private void handleSell(Scanner scanner) {
+        System.out.println("Enter ticker symbol: ");
+        String ticker = scanner.nextLine();
+        System.out.println("Enter quantity: ");
+        int quantity = Integer.parseInt(scanner.nextLine());
+        Stock stock = market.getStock(ticker);
+        if (stock != null) {
+            portfolio.sellStock(ticker, quantity, stock.getPrice());
+        } else {
+            System.out.println("Stock not found.");
+        }
+    }
+
+    public static void main(String[] args) {
+        StockTradingPlatform platform = new StockTradingPlatform(10000.00);
+        platform.start();
+    }
+}
